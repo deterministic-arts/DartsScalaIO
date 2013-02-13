@@ -63,7 +63,6 @@ object Utilities {
         loop(start, length)
     }
     
-    
     private val ConnectTimeOut = 30000
     private val ReadTimeOut = 30000
     private val DefaultCharSet = "UTF-8"
@@ -73,7 +72,19 @@ object Utilities {
         val encoding: String,
         val readTimeout: Int,
         val connectTimeout: Int
-    )
+    ) {
+        def withEncoding(e: String): URLReaderConfiguration = 
+            if (e == encoding) this 
+            else URLReaderConfiguration(e, readTimeout, connectTimeout)
+            
+        def withReadTimeout(millis: Int): URLReaderConfiguration = 
+            if (millis == readTimeout) this
+            else URLReaderConfiguration(encoding, millis, connectTimeout)
+            
+        def withConnectTimeout(millis: Int): URLReaderConfiguration =
+            if (millis == connectTimeout) this
+            else URLReaderConfiguration(encoding, readTimeout, millis)
+    }
     
     implicit val defaultURLReaderConfiguration = URLReaderConfiguration(
         "UTF-8",
