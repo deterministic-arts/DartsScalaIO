@@ -1,0 +1,67 @@
+package darts.lib.io.properties
+
+import scala.collection.immutable.{Map => StableMap}
+import java.io.File
+
+trait PropertyStore {
+	
+    def properties: PropertyMap
+}
+
+object PropertyStore {
+
+    def apply(map: StableMap[String,String]): PropertyStore = new MemoryPropertyStore(map)
+    def apply(map: PropertyMap): PropertyStore = new MemoryPropertyStore(map)
+    def apply(file: File, encoding: String): PropertyStore = new SimpleFilePropertyStore(file, encoding)
+    def apply(file: File): PropertyStore = new SimpleFilePropertyStore(file)
+}
+
+
+class MemoryPropertyStore (val properties: PropertyMap)
+extends PropertyStore {
+
+    def this(map: StableMap[String,String]) = this(PropertyMap(map))
+}
+
+
+class SimpleFilePropertyStore (val file: File, val encoding: String)
+extends PropertyStore {
+    
+    def this(file: File) = this(file, "utf-8")
+    
+    def properties: PropertyMap = propmap
+    
+    private val propmap = new Mapping
+    private val mutex = new AnyRef
+	private var base: StableMap[String,String] = null
+	private var ftime: Long = java.lang.Long.MIN_VALUE
+
+	private def readAll: StableMap[String,String] = mutex synchronized {
+        if (base ne null) base else {
+            ftime = file.lastModified()
+        	base = Parser.parse(file, encoding)
+        	base
+        }
+    }
+
+    def check: Boolean = {
+        if (ftime >= file.lastModified()) false 
+        else { reset; true }
+    }
+
+    def reset {
+        mutex synchronized {
+            base = null
+            propmap.reset
+        }
+    }
+        
+    private class Mapping extends BasicPropertyMap {
+
+        private[SimpleFilePropertyStore] def reset: Unit =
+            clear
+        
+	    protected def read(key: String): Option[String] =
+	        readAll.get(key)    
+    }
+}
