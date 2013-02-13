@@ -1,7 +1,7 @@
 //-----------------------------------------------------------------------------//
 //                                                                             //
 //  Deterministic Arts - Scala I/O Utitilites								   //
-//  Copyright (c) 2010 Dirk Eßer                                               //
+//  Copyright (c) 2012 Dirk Eßer                                               //
 //                                                                             //
 //  Licensed under the Apache License, Version 2.0 (the "License");            //
 //  you may not use this file except in compliance with the License.           //
