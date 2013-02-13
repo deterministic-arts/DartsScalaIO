@@ -46,8 +46,6 @@ extends PropertyStore {
 class SimpleFilePropertyStore (val file: File)(implicit val urlReaderConfiguration: Utilities.URLReaderConfiguration)
 extends PropertyStore {
     
-    import Utilities.URLReaderConfiguration
-    
     def properties: PropertyMap = propmap
     
     private val propmap = new Mapping
