@@ -17,37 +17,26 @@ trait PropertyMap {
 
 object PropertyMap {
     
+    import darts.lib.io.Utilities._
+    
     def apply(map: StableMap[String,String]): PropertyMap = 
         new SimplePropertyMap(map)
     
-    def apply(file: File): PropertyMap = 
+    def apply(file: File)(implicit config: URLReaderConfiguration): PropertyMap = 
         apply(Parser.parse(file))
     
-    def apply(file: File, encoding: String): PropertyMap = 
-        apply(Parser.parse(file, encoding))
-    
-    def apply(uri: URI): PropertyMap = 
+    def apply(uri: URI)(implicit config: URLReaderConfiguration): PropertyMap = 
         apply(Parser.parse(uri))
-    
-    def apply(uri: URI, encoding: String): PropertyMap = 
-        apply(Parser.parse(uri, encoding))
 
-    def apply(url: URL): PropertyMap = 
+    def apply(url: URL)(implicit config: URLReaderConfiguration): PropertyMap = 
         apply(Parser.parse(url))
     
-    def apply(url: URL, encoding: String): PropertyMap = 
-        apply(Parser.parse(url, encoding))
-
+    def apply(source: String, stream: InputStream)(implicit config: URLReaderConfiguration): PropertyMap = 
+        apply(Parser.parse(source, stream))
+        
     def apply(source: String, reader: Reader): PropertyMap = 
         apply(Parser.parse(source, reader))
-    
-    def apply(source: String, stream: InputStream, encoding: String): PropertyMap = 
-        apply(Parser.parse(source, stream, encoding))
-        
-    def apply(source: String, stream: InputStream): PropertyMap = 
-        apply(Parser.parse(source, stream))
 }
-
 
 
 abstract class BasicPropertyMap 

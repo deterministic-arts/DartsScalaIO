@@ -20,6 +20,9 @@
 package darts.lib.io
 
 import scala.annotation.tailrec
+
+import java.util.regex.Pattern
+import java.net._
 import java.io._
 
 object Utilities {
@@ -58,5 +61,67 @@ object Utilities {
             }
         }
         loop(start, length)
+    }
+    
+    
+    private val ConnectTimeOut = 30000
+    private val ReadTimeOut = 30000
+    private val DefaultCharSet = "UTF-8"
+    private val CharSetPattern = Pattern.compile(".*;\\s*[cC][hH][aA][rR][sS][eE][tT]\\s*=\\s*([^\\s;]+)\\s*(?:;.*)?$")
+    
+    final case class URLReaderConfiguration (
+        val encoding: String,
+        val readTimeout: Int,
+        val connectTimeout: Int
+    )
+    
+    implicit val defaultURLReaderConfiguration = URLReaderConfiguration(
+        "UTF-8",
+        ReadTimeOut,
+        ConnectTimeOut
+    )
+    
+    private def coalesce[S <: AnyRef](v1: S, v2: =>S): S = if (v1 == null) v2 else v1
+    
+    private def extractCharSet(connection: URLConnection, default: =>String): String = {
+        extractCharSet(coalesce(connection.getContentType, "application/octet-stream"), default)
+    }
+    
+    private def extractCharSet(ct: String, default: =>String): String = {
+        val matcher = CharSetPattern.matcher(ct)
+        if (!matcher.matches()) default
+        else {
+            val name = matcher.group(1).trim
+            if (name.length == 0) default
+            else name
+        }
+    }
+    
+    def withURLStream[U](url: URL)(fn: (String,InputStream,String)=>U)(implicit config: URLReaderConfiguration): U = {
+        
+        val uri = url.toExternalForm
+		val connection = url.openConnection()
+		
+		connection.setDoInput(true)
+		connection.setDoOutput(false)
+		connection.setAllowUserInteraction(false)
+		connection.setUseCaches(false)
+		connection.setConnectTimeout(config.connectTimeout)
+		connection.setReadTimeout(config.readTimeout)
+
+		val stream = connection.getInputStream
+
+		try fn(uri, stream, extractCharSet(connection, config.encoding)) 
+		finally
+			stream.close
+    }
+    
+    def withURLReader[U](url: URL)(fn: Reader=>U)(implicit config: URLReaderConfiguration): U = {
+		withURLStream(url) { (uri, stream, encoding) =>
+		    val reader = new InputStreamReader(stream, encoding)
+		    try fn(reader)
+		    finally
+		    	reader.close
+		}
     }
 }

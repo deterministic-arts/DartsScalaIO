@@ -3,6 +3,7 @@ package darts.lib.io.properties
 import scala.collection.immutable.{Map => StableMap}
 import java.io.File
 
+
 trait PropertyStore {
 	
     def properties: PropertyMap
@@ -27,8 +28,12 @@ extends PropertyStore {
 class SimpleFilePropertyStore (val file: File, val encoding: String)
 extends PropertyStore {
     
+    import darts.lib.io.Utilities
+    import Utilities.URLReaderConfiguration
+    
     def this(file: File) = this(file, "utf-8")
     
+    protected def urlReaderConfiguration: URLReaderConfiguration = Utilities.defaultURLReaderConfiguration
     def properties: PropertyMap = propmap
     
     private val propmap = new Mapping
@@ -38,8 +43,9 @@ extends PropertyStore {
 
 	private def readAll: StableMap[String,String] = mutex synchronized {
         if (base ne null) base else {
+            implicit val config = urlReaderConfiguration
             ftime = file.lastModified()
-        	base = Parser.parse(file, encoding)
+        	base = Parser.parse(file)
         	base
         }
     }

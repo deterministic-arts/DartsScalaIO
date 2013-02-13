@@ -263,77 +263,26 @@ private class Lexer (val source: String, val reader: Reader) {
 
 private object Parser {
     
+    import darts.lib.io.Utilities._
     import java.util.regex.Pattern
     import scala.collection.mutable.HashMap
     
-    private val DefaultCharSet = "UTF-8"
-    private val CharSetPattern = Pattern.compile(".*;\\s*[cC][hH][aA][rR][sS][eE][tT]\\s*=\\s*([^\\s;]+)\\s*(?:;.*)?$")
-    private val ConnectTimeOut = 30000
-    private val ReadTimeOut = 30000
-    
-    private def coalesce[S <: AnyRef](v1: S, v2: =>S): S = if (v1 == null) v2 else v1
-    
-    private def extractCharSet(connection: URLConnection, default: =>String): String = {
-        extractCharSet(coalesce(connection.getContentType, "application/octet-stream"), default)
-    }
-    
-    private def extractCharSet(ct: String, default: =>String): String = {
-        val matcher = CharSetPattern.matcher(ct)
-        if (!matcher.matches()) default
-        else {
-            val name = matcher.group(1).trim
-            if (name.length == 0) default
-            else name
-        }
-    }
-    
-    private def withURLStream[U](url: URL, defaultEncoding: String)(fn: (String,InputStream,String)=>U): U = {
-        
-        val uri = url.toExternalForm
-		val connection = url.openConnection()
-		
-		connection.setDoInput(true)
-		connection.setDoOutput(false)
-		connection.setAllowUserInteraction(false)
-		connection.setUseCaches(false)
-		connection.setConnectTimeout(ConnectTimeOut)
-		connection.setReadTimeout(ReadTimeOut)
+    def parse(uri: URI)(implicit config: URLReaderConfiguration): Map[String,String] = 
+        parse(uri.toURL)
 
-		val stream = connection.getInputStream
+    def parse(url: URL)(implicit config: URLReaderConfiguration): Map[String,String] = 
+        withURLStream(url) { (s,t,u) => parse(s, t) }
 
-		try fn(uri, stream, extractCharSet(connection, defaultEncoding)) 
-		finally
-			stream.close
-    }
-        
-    def parse(file: File, encoding: String): Map[String,String] = {
-        val reader = new InputStreamReader(new BufferedInputStream(new FileInputStream(file)), encoding)
+    def parse(file: File)(implicit config: URLReaderConfiguration): Map[String,String] = {
+        val reader = new InputStreamReader(new BufferedInputStream(new FileInputStream(file)), config.encoding)
         try parse(file.toURI.toASCIIString, reader) finally reader.close
     }
     
-    def parse(uri: URI): Map[String,String] = 
-        parse(uri.toURL)
-    
-    def parse(uri: URI, defaultEncoding: String): Map[String,String] = 
-        parse(uri.toURL, defaultEncoding)
-
-    def parse(url: URL, defaultEncoding: String): Map[String,String] = 
-        withURLStream(url, defaultEncoding) { (s,t,u) => parse(s, t, u) }
-        
-    def parse(url: URL): Map[String,String] =
-        parse(url, DefaultCharSet)
-
-    def parse(file: File): Map[String,String] = 
-        parse(file, DefaultCharSet)
+    def parse(source: String, stream: InputStream)(implicit config: URLReaderConfiguration): Map[String,String] =
+        parse(source, new InputStreamReader(stream, config.encoding))
     
     def parse(string: String): Map[String,String] = 
         parse("<string>", new StringReader(string))
-    
-    def parse(source: String, stream: InputStream): Map[String,String] =
-        parse(source, stream, DefaultCharSet)
-    
-    def parse(source: String, stream: InputStream, encoding: String): Map[String,String] =
-        parse(source, new InputStreamReader(stream, encoding)) 
     
     def parse(source: String, reader: Reader): Map[String,String] = {
     		
