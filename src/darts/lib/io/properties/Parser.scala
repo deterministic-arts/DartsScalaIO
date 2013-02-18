@@ -280,7 +280,7 @@ private class Lexer (val source: String, val reader: Reader) {
 }
 
 
-private object Parser {
+object Parser {
     
     import darts.lib.io.Utilities._
     import java.util.regex.Pattern

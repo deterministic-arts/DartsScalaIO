@@ -39,4 +39,6 @@ object Property {
     
     type Store = PropertyStore
     val Store = PropertyStore
+    
+    val MapParser = Parser
 }
