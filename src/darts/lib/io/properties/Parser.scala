@@ -287,10 +287,10 @@ object Parser {
     import scala.collection.mutable.HashMap
     
     def parse(uri: URI)(implicit config: URLReaderConfiguration): Map[String,String] = 
-        parse(uri.toURL)
+        parse(uri.toURL)(config)
 
     def parse(url: URL)(implicit config: URLReaderConfiguration): Map[String,String] = 
-        withURLStream(url) { (s,t,u) => parse(s, t) }
+        withURLStream(url)({ (s,t,u) => parse(s, t)(config) })(config)
 
     def parse(file: File)(implicit config: URLReaderConfiguration): Map[String,String] = {
         val reader = new InputStreamReader(new BufferedInputStream(new FileInputStream(file)), config.encoding)

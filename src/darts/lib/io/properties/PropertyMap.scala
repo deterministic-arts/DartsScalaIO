@@ -42,16 +42,16 @@ object PropertyMap {
         new SimplePropertyMap(map)
     
     def apply(file: File)(implicit config: URLReaderConfiguration): PropertyMap = 
-        apply(Parser.parse(file))
+        apply(Parser.parse(file)(config))
     
     def apply(uri: URI)(implicit config: URLReaderConfiguration): PropertyMap = 
-        apply(Parser.parse(uri))
+        apply(Parser.parse(uri)(config))
 
     def apply(url: URL)(implicit config: URLReaderConfiguration): PropertyMap = 
-        apply(Parser.parse(url))
+        apply(Parser.parse(url)(config))
     
     def apply(source: String, stream: InputStream)(implicit config: URLReaderConfiguration): PropertyMap = 
-        apply(Parser.parse(source, stream))
+        apply(Parser.parse(source, stream)(config))
         
     def apply(source: String, reader: Reader): PropertyMap = 
         apply(Parser.parse(source, reader))

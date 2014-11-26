@@ -87,7 +87,7 @@ object Utilities {
     }
     
     implicit val defaultURLReaderConfiguration = URLReaderConfiguration(
-        "UTF-8",
+        DefaultCharSet,
         ReadTimeOut,
         ConnectTimeOut
     )
@@ -128,11 +128,11 @@ object Utilities {
     }
     
     def withURLReader[U](url: URL)(fn: Reader=>U)(implicit config: URLReaderConfiguration): U = {
-		withURLStream(url) { (uri, stream, encoding) =>
+		withURLStream(url)({ (uri, stream, encoding) =>
 		    val reader = new InputStreamReader(stream, encoding)
 		    try fn(reader)
 		    finally
 		    	reader.close
-		}
+		})(config)
     }
 }
